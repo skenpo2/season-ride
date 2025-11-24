@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 export const api = axios.create({
-  baseURL: 'https://voya-season-backend.onrender.com/api',
+  baseURL: 'https://driver-api.voyaapp.co/api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CardCarousel } from './CardCarousel';
-import { Users, Fuel, Gauge, Star, Heart, ArrowRight } from 'lucide-react';
+import { Users, Fuel, Heart, ArrowRight } from 'lucide-react';
 import { type Car } from '@/types/carTypes';
 import { cn } from '@/lib/utils';
 
@@ -44,20 +44,11 @@ export const CarCard = ({ car, onSelect, className }: CarCardProps) => {
 
       {/* Content Body */}
       <CardContent className="flex-1 flex flex-col p-5">
-        {/* Title & Rating Row */}
-        <div className="flex justify-between items-start mb-2">
+        {/* Title Row (Rating Removed) */}
+        <div className="mb-2">
           <h3 className="font-bold text-lg text-slate-900 line-clamp-1 tracking-tight">
             {car.name}
           </h3>
-          <div className="flex items-center gap-1 shrink-0 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-            <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-            <span className="text-xs font-bold text-slate-700">
-              {car.rating || 5.0}
-            </span>
-            <span className="text-[10px] text-slate-400">
-              ({car.trips || 0})
-            </span>
-          </div>
         </div>
 
         {/* Price Tag */}
@@ -72,8 +63,8 @@ export const CarCard = ({ car, onSelect, className }: CarCardProps) => {
 
         <Separator className="mb-4 bg-slate-100" />
 
-        {/* Specs Grid */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* Specs Grid (Changed to grid-cols-2, Trans removed) */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-slate-400">
               <Users className="w-3.5 h-3.5" />
@@ -83,18 +74,6 @@ export const CarCard = ({ car, onSelect, className }: CarCardProps) => {
             </div>
             <span className="text-sm font-medium text-slate-700">
               {car.features.seats} Adults
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-1 border-l border-slate-100 pl-4">
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <Gauge className="w-3.5 h-3.5" />
-              <span className="text-[10px] uppercase tracking-wider font-semibold">
-                Trans
-              </span>
-            </div>
-            <span className="text-sm font-medium text-slate-700 truncate">
-              {car.features.transmission || 'Auto'}
             </span>
           </div>
 

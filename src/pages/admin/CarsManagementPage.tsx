@@ -161,11 +161,11 @@ export const CarsManagementPage = () => {
                         >
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem
+                        {/* <DropdownMenuItem
                           onClick={() => navigate(`/car/${car.id}`)}
                         >
                           View Details
-                        </DropdownMenuItem>
+                        </DropdownMenuItem> */}
                         <DropdownMenuItem
                           onClick={() => setDeleteId(car.id)}
                           className="text-red-600"

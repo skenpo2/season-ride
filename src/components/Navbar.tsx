@@ -10,11 +10,7 @@ export const Navbar = () => (
       <div className="flex items-center gap-4">
         {/* Logo Section */}
         <div className="relative flex items-center">
-          <img
-            src={logo}
-            alt="Voya Logo"
-            className="h-8 w-auto" /* Adjust h-8 to resize the logo */
-          />
+          <img src={logo} alt="Voya Logo" className="h-8 w-auto" />
         </div>
 
         {/* Divider */}

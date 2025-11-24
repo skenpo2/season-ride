@@ -14,7 +14,7 @@ import { useState } from 'react';
 
 const VOYA_DARK_BG = 'bg-[#050B14]';
 const VOYA_TEAL = 'text-[#00E599]';
-const VOYA_TEAL_BORDER = 'border-[#00E599]';
+import logo from '../../assets/Voya_logo.svg';
 
 export const AdminLayout = () => {
   const location = useLocation();
@@ -44,15 +44,8 @@ export const AdminLayout = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3">
-              <div className="relative">
-                <div
-                  className={`border ${VOYA_TEAL_BORDER}/30 ${VOYA_TEAL} text-[10px] font-medium px-2 py-0.5 rounded-full uppercase tracking-wider`}
-                >
-                  Beta
-                </div>
-                <div className="text-white text-xl font-light tracking-widest mt-1">
-                  V<span className="font-normal">O</span>YA
-                </div>
+              <div className="relative flex items-center">
+                <img src={logo} alt="Voya Logo" className="h-8 w-auto" />
               </div>
             </Link>
 
