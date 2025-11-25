@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { MessageCircleQuestion } from 'lucide-react';
+import logo from '../assets/Voya_logo.svg';
 
 const VOYA_DARK_BG = 'bg-[#050B14]';
 // Using the number provided in your Terms & Conditions
@@ -13,9 +14,7 @@ export const Navbar = () => (
       <div className="flex items-center gap-4">
         {/* Logo Section */}
         <div className="relative flex items-center">
-          <span className="text-2xl font-bold text-white tracking-widest">
-            VOYA
-          </span>
+          <img src={logo} alt="Voya" className="h-10 w-auto object-contain" />
         </div>
 
         {/* Divider */}
