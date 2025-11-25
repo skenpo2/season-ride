@@ -1,10 +1,17 @@
-import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { useState, useEffect, useMemo } from 'react';
+import {
+  format,
+  isToday,
+  set,
+  differenceInMinutes,
+  startOfDay,
+} from 'date-fns';
 import { useCreateBooking } from '@/hooks/useCar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import {
   Select,
@@ -22,32 +29,51 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Users,
   Fuel,
-  Mail,
-  MessageCircle,
-  MapPin,
   Calendar as CalendarIcon,
-  AlertCircle,
   Loader2,
   Clock,
   X,
+  ShieldCheck,
+  Info,
+  Zap,
 } from 'lucide-react';
-import type {
-  Car,
-  BookingFormData,
-  FormErrors,
-  BookingDate,
-} from '@/types/carTypes';
+import type { Car, FormErrors, BookingDate } from '@/types/carTypes';
 
 interface BookingFormProps {
   car: Car;
   onSuccess?: () => void;
 }
 
+const URGENCY_FEE = 50000;
+const SHORT_NOTICE_FEE = 50000;
+
+const TIME_OPTIONS = [
+  { label: '6am', hour: 6 },
+  { label: '7am', hour: 7 },
+  { label: '8am', hour: 8 },
+  { label: '9am', hour: 9 },
+  { label: '10am', hour: 10 },
+  { label: '11am', hour: 11 },
+  { label: '12', hour: 12 },
+  { label: '1pm', hour: 13 },
+  { label: '2pm', hour: 14 },
+  { label: '3pm', hour: 15 },
+  { label: '4pm', hour: 16 },
+  { label: '5pm', hour: 17 },
+  { label: '6pm', hour: 18 },
+  { label: '7pm', hour: 19 },
+  { label: '8pm', hour: 20 },
+  { label: '9pm', hour: 21 },
+  { label: '10pm', hour: 22 },
+  { label: '11pm', hour: 23 },
+  { label: '12pm (Midnight)', hour: 24 },
+];
+
 export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Form Data State
+  // Form Data
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -56,84 +82,131 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
     pickup: '',
   });
 
-  // --- DATE/TIME STATE ---
+  // Logic State
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
-  const [selectedTime, setSelectedTime] = useState<string>('8am');
-  // ---------------------------
+  const [selectedHour, setSelectedHour] = useState<string>('9');
+  const [acceptUrgency, setAcceptUrgency] = useState(false);
+  const [isShortNotice, setIsShortNotice] = useState(false);
 
   const createBooking = useCreateBooking();
 
-  // Clear date errors if user selects dates
+  // --- 2. FLAWLESS TIME CALCULATION LOGIC ---
   useEffect(() => {
-    if (selectedDates.length > 0 && errors.dates) {
-      setErrors((prev) => ({ ...prev, dates: '' }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDates]);
+    const checkTimeLogic = () => {
+      if (selectedDates.length === 0) {
+        setIsShortNotice(false);
+        return;
+      }
 
-  const calculateTotalAmount = () => {
-    return selectedDates.length * car.price;
-  };
+      const sortedDates = [...selectedDates].sort(
+        (a, b) => a.getTime() - b.getTime()
+      );
+      const firstDate = sortedDates[0];
 
-  // Helper to convert state to API payload format
+      if (isToday(firstDate)) {
+        if (acceptUrgency) {
+          const now = new Date();
+          const hourInt = parseInt(selectedHour);
+          let pickupDateTime: Date;
+
+          if (hourInt === 24) {
+            pickupDateTime = set(firstDate, {
+              hours: 0,
+              minutes: 0,
+              seconds: 0,
+            });
+            pickupDateTime.setDate(pickupDateTime.getDate() + 1);
+          } else {
+            pickupDateTime = set(firstDate, {
+              hours: hourInt,
+              minutes: 0,
+              seconds: 0,
+            });
+          }
+
+          const diffMinutes = differenceInMinutes(pickupDateTime, now);
+          if (diffMinutes < 90) {
+            setIsShortNotice(true);
+          } else {
+            setIsShortNotice(false);
+          }
+        } else {
+          setIsShortNotice(false);
+        }
+      } else {
+        setIsShortNotice(false);
+      }
+    };
+
+    checkTimeLogic();
+  }, [selectedDates, selectedHour, acceptUrgency]);
+
+  // --- 3. TOTAL CALCULATION ---
+  const calculation = useMemo(() => {
+    const days = selectedDates.length;
+    const subtotal = days * car.price;
+
+    const hasToday = selectedDates.some((d) => isToday(d));
+    const urgencyCost = acceptUrgency && hasToday ? URGENCY_FEE : 0;
+    const shortNoticeCost = isShortNotice ? SHORT_NOTICE_FEE : 0;
+
+    const total = subtotal + urgencyCost + shortNoticeCost;
+
+    return { days, subtotal, urgencyCost, shortNoticeCost, total };
+  }, [selectedDates, car.price, acceptUrgency, isShortNotice]);
+
   const getFormattedBookingDates = (): BookingDate[] => {
-    // Sort dates chronologically
     const sortedDates = [...selectedDates].sort(
       (a, b) => a.getTime() - b.getTime()
     );
 
+    const hourInt = parseInt(selectedHour);
+    const timeString = hourInt === 24 ? '00:00' : `${hourInt}:00`;
+
     return sortedDates.map((date) => ({
       date: format(date, 'yyyy-MM-dd'),
-      time: selectedTime,
+      time: timeString,
     }));
   };
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
-
-    if (!formData.firstName.trim())
-      newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-
+    if (!formData.firstName.trim()) newErrors.firstName = 'Required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Required';
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-
-    if (!formData.whatsapp.trim())
-      newErrors.whatsapp = 'Phone number is required';
-    if (!formData.pickup.trim())
-      newErrors.pickup = 'Pickup location is required';
-
-    // Validate dates
-    if (selectedDates.length === 0) {
-      newErrors.dates = 'Please select at least one date';
-    }
-
+    if (!formData.email.trim()) newErrors.email = 'Required';
+    else if (!emailRegex.test(formData.email))
+      newErrors.email = 'Invalid email';
+    if (!formData.whatsapp.trim()) newErrors.whatsapp = 'Required';
+    if (!formData.pickup.trim()) newErrors.pickup = 'Required';
+    if (selectedDates.length === 0) newErrors.dates = 'Select dates';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!validate()) return;
-
     const validDatesPayload = getFormattedBookingDates();
 
-    const bookingData: BookingFormData = {
+    const payload = {
       ...formData,
       carId: car.id,
-      paymentMethod: 'paystack', // Hardcoded to paystack
+      paymentMethod: 'paystack',
       dates: validDatesPayload,
+      metadata: {
+        agreedToUrgencyFee: calculation.urgencyCost > 0,
+        isShortNotice: calculation.shortNoticeCost > 0,
+        clientCalculatedTotal: calculation.total,
+        selectedHourValue: parseInt(selectedHour),
+        totalDays: calculation.days,
+      },
     };
 
-    console.log('Submitting Payload:', bookingData);
+    console.log('Final Payload:', payload);
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const response: any = await createBooking.mutateAsync(bookingData);
-
+      const response: any = await createBooking.mutateAsync(payload as any);
       const responseData = response?.data || response;
       const paymentData = responseData?.data?.payment || responseData?.payment;
 
@@ -142,7 +215,6 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
         window.location.href = paymentData.authorizationUrl;
         return;
       }
-
       onSuccess?.();
     } catch (error) {
       console.error('Booking failed:', error);
@@ -152,9 +224,8 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field as keyof FormErrors]) {
+    if (errors[field as keyof FormErrors])
       setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
   };
 
   const removeDate = (dateToRemove: Date) => {
@@ -163,8 +234,6 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
     );
     setSelectedDates(newDates);
   };
-
-  const totalAmount = calculateTotalAmount();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -185,13 +254,13 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
           <div className="flex gap-2">
             <Badge
               variant="outline"
-              className="bg-white text-xs font-normal border-slate-200 text-slate-700"
+              className="bg-white text-xs border-slate-200 text-slate-700"
             >
               <Users className="w-3 h-3 mr-1" /> {car.features.seats}
             </Badge>
             <Badge
               variant="outline"
-              className="bg-white text-xs font-normal border-slate-200 text-slate-700"
+              className="bg-white text-xs border-slate-200 text-slate-700"
             >
               <Fuel className="w-3 h-3 mr-1" /> {car.features.fuel}
             </Badge>
@@ -207,150 +276,103 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
 
       <div className="h-px bg-slate-100" />
 
-      {/* Form Fields */}
+      {/* Input Fields */}
       <div className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="space-y-2">
-            <Label
-              htmlFor="firstName"
-              className={errors.firstName ? 'text-red-500' : 'text-slate-700'}
-            >
-              First Name
-            </Label>
+            <Label>First Name</Label>
             <Input
-              id="firstName"
-              placeholder="John"
-              className={`h-11 bg-white ${
-                errors.firstName
-                  ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
-                  : 'border-slate-200'
-              }`}
               value={formData.firstName}
               onChange={(e) => handleChange('firstName', e.target.value)}
+              className={errors.firstName ? 'border-red-500 bg-red-50' : ''}
             />
-            {errors.firstName && (
-              <p className="text-xs text-red-500 flex items-center">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                {errors.firstName}
-              </p>
-            )}
           </div>
           <div className="space-y-2">
-            <Label
-              htmlFor="lastName"
-              className={errors.lastName ? 'text-red-500' : 'text-slate-700'}
-            >
-              Last Name
-            </Label>
+            <Label>Last Name</Label>
             <Input
-              id="lastName"
-              placeholder="Doe"
-              className={`h-11 bg-white ${
-                errors.lastName
-                  ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
-                  : 'border-slate-200'
-              }`}
               value={formData.lastName}
               onChange={(e) => handleChange('lastName', e.target.value)}
+              className={errors.lastName ? 'border-red-500 bg-red-50' : ''}
             />
-            {errors.lastName && (
-              <p className="text-xs text-red-500 flex items-center">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                {errors.lastName}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Email</Label>
+          <Input
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleChange('email', e.target.value)}
+            className={errors.email ? 'border-red-500 bg-red-50' : ''}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>WhatsApp</Label>
+          <Input
+            type="tel"
+            value={formData.whatsapp}
+            onChange={(e) => handleChange('whatsapp', e.target.value)}
+            className={errors.whatsapp ? 'border-red-500 bg-red-50' : ''}
+          />
+        </div>
+
+        {/* --- URGENCY CHECKBOX --- */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <Checkbox
+              id="urgency"
+              checked={acceptUrgency}
+              onCheckedChange={(checked) => {
+                setAcceptUrgency(checked === true);
+                if (checked === false) {
+                  const newDates = selectedDates.filter((d) => !isToday(d));
+                  setSelectedDates(newDates);
+                }
+              }}
+              className="mt-1 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+            />
+            <div className="space-y-1">
+              <Label
+                htmlFor="urgency"
+                className="text-amber-900 font-semibold cursor-pointer"
+              >
+                I need the car for today
+              </Label>
+              <p className="text-xs text-amber-700">
+                Bookings less than 24 hours in advance attract a ₦
+                {URGENCY_FEE.toLocaleString()} urgency fee.
               </p>
-            )}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="email"
-            className={errors.email ? 'text-red-500' : 'text-slate-700'}
-          >
-            Email Address
-          </Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
-            <Input
-              id="email"
-              type="email"
-              placeholder="john@example.com"
-              className={`pl-9 h-11 bg-white ${
-                errors.email
-                  ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
-                  : 'border-slate-200'
-              }`}
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-            />
-          </div>
-          {errors.email && (
-            <p className="text-xs text-red-500 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              {errors.email}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label
-            htmlFor="whatsapp"
-            className={errors.whatsapp ? 'text-red-500' : 'text-slate-700'}
-          >
-            WhatsApp Number
-          </Label>
-          <div className="relative">
-            <MessageCircle className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
-            <Input
-              id="whatsapp"
-              type="tel"
-              placeholder="+234 800 000 0000"
-              className={`pl-9 h-11 bg-white ${
-                errors.whatsapp
-                  ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
-                  : 'border-slate-200'
-              }`}
-              value={formData.whatsapp}
-              onChange={(e) => handleChange('whatsapp', e.target.value)}
-            />
-          </div>
-          {errors.whatsapp && (
-            <p className="text-xs text-red-500 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              {errors.whatsapp}
-            </p>
-          )}
-        </div>
-
-        {/* --- DATE & TIME SELECTION --- */}
+        {/* --- DATE & TIME SELECTOR --- */}
         <div className="space-y-4 pt-2">
           <Label className={errors.dates ? 'text-red-500' : 'text-slate-700'}>
             Select Dates & Pickup Time
           </Label>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 1. Global Time Selector */}
+            {/* 1. Time Selector */}
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 ml-1">
-                Pickup Time (All Dates)
-              </label>
-              <Select value={selectedTime} onValueChange={setSelectedTime}>
+              <label className="text-xs text-slate-500 ml-1">Pickup Time</label>
+              <Select value={selectedHour} onValueChange={setSelectedHour}>
                 <SelectTrigger className="h-11 bg-white border-slate-200 w-full">
                   <Clock className="w-4 h-4 mr-2 text-slate-400" />
                   <SelectValue placeholder="Select Time" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="8am">8:00 AM</SelectItem>
-                  <SelectItem value="9am">9:00 AM</SelectItem>
-                  <SelectItem value="10am">10:00 AM</SelectItem>
-                  <SelectItem value="12pm">12:00 PM</SelectItem>
-                  <SelectItem value="2pm">2:00 PM</SelectItem>
-                  <SelectItem value="4pm">4:00 PM</SelectItem>
+                <SelectContent className="max-h-[200px]">
+                  {TIME_OPTIONS.map((time) => (
+                    <SelectItem key={time.hour} value={time.hour.toString()}>
+                      {time.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* 2. Multi-Date Selector */}
+            {/* 2. Date Selector */}
             <div className="space-y-1">
               <label className="text-xs text-slate-500 ml-1">Dates</label>
               <Popover>
@@ -361,34 +383,61 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
                       'w-full h-11 justify-start text-left font-normal bg-white',
                       selectedDates.length === 0 && 'text-muted-foreground',
                       errors.dates
-                        ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
+                        ? 'border-red-500 bg-red-50'
                         : 'border-slate-200'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDates.length > 0 ? (
-                      <span>{selectedDates.length} date(s) selected</span>
-                    ) : (
-                      <span>Pick dates</span>
-                    )}
+                    {selectedDates.length > 0
+                      ? `${selectedDates.length} date(s)`
+                      : 'Pick dates'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <CalendarComponent
                     mode="multiple"
-                    max={7}
                     selected={selectedDates}
-                    // FIX IS HERE: Default to empty array if undefined
-                    onSelect={(dates) => setSelectedDates(dates ?? [])}
-                    disabled={(date) =>
-                      date < new Date(new Date().setHours(0, 0, 0, 0))
-                    }
+                    onSelect={(dates) => {
+                      // ✅ FIX: State update + Error clearing in one synchronous handler
+                      const newDates = dates ?? [];
+                      setSelectedDates(newDates);
+                      if (newDates.length > 0 && errors.dates) {
+                        setErrors((prev) => ({ ...prev, dates: undefined }));
+                      }
+                    }}
+                    disabled={(date) => {
+                      if (acceptUrgency) {
+                        return date < startOfDay(new Date());
+                      } else {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        tomorrow.setHours(0, 0, 0, 0);
+                        return date < tomorrow;
+                      }
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
               </Popover>
             </div>
           </div>
+
+          {/* Short Notice Alert */}
+          {isShortNotice && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-red-700 animate-in slide-in-from-top-2">
+              <Zap className="w-4 h-4 mt-0.5 shrink-0" />
+              <div className="text-xs">
+                <span className="font-bold block mb-1">
+                  Express Processing Fee Applies
+                </span>
+                Your pickup time is less than 90 minutes from now. An additional{' '}
+                <span className="font-bold">
+                  ₦{SHORT_NOTICE_FEE.toLocaleString()}
+                </span>{' '}
+                fee has been added.
+              </div>
+            </div>
+          )}
 
           {/* Selected Date Badges */}
           {selectedDates.length > 0 && (
@@ -399,12 +448,12 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
                   <Badge
                     key={idx}
                     variant="secondary"
-                    className="bg-white border-slate-200 text-slate-700 py-1 pl-2 pr-1 gap-1"
+                    className="bg-white border-slate-200 text-slate-700 gap-1"
                   >
                     {format(date, 'MMM dd')}
                     <button
                       onClick={() => removeDate(date)}
-                      className="ml-1 hover:bg-slate-100 rounded-full p-0.5"
+                      className="hover:bg-slate-100 rounded-full p-0.5"
                     >
                       <X className="w-3 h-3 text-slate-400 hover:text-red-500" />
                     </button>
@@ -412,101 +461,97 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
                 ))}
             </div>
           )}
-
-          {errors.dates && (
-            <p className="text-xs text-red-500 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              {errors.dates}
-            </p>
-          )}
         </div>
 
         <div className="space-y-2">
-          <Label
-            htmlFor="pickup"
-            className={errors.pickup ? 'text-red-500' : 'text-slate-700'}
-          >
-            Pickup Address
-          </Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
-            <Input
-              id="pickup"
-              placeholder="Enter pickup location"
-              className={`pl-9 h-11 bg-white ${
-                errors.pickup
-                  ? 'border-red-500 focus-visible:ring-red-500 bg-red-50'
-                  : 'border-slate-200'
-              }`}
-              value={formData.pickup}
-              onChange={(e) => handleChange('pickup', e.target.value)}
-            />
+          <Label>Pickup Address</Label>
+          <Input
+            value={formData.pickup}
+            onChange={(e) => handleChange('pickup', e.target.value)}
+            className={errors.pickup ? 'border-red-500 bg-red-50' : ''}
+            placeholder="Enter full address"
+          />
+        </div>
+      </div>
+
+      {/* --- PAYMENT SUMMARY --- */}
+      <div className="bg-slate-900 text-slate-100 p-6 rounded-2xl space-y-4 shadow-xl">
+        <h4 className="font-semibold text-lg flex items-center gap-2">
+          Payment Summary
+        </h4>
+
+        <div className="space-y-3 text-sm">
+          <div className="flex justify-between items-center text-slate-300">
+            <span>Daily Rate (x{calculation.days})</span>
+            <span>₦{calculation.subtotal.toLocaleString()}</span>
           </div>
-          {errors.pickup && (
-            <p className="text-xs text-red-500 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              {errors.pickup}
-            </p>
+
+          {calculation.urgencyCost > 0 && (
+            <div className="flex justify-between items-center text-amber-400">
+              <span className="flex items-center gap-1.5">
+                <Info className="w-3 h-3" /> Urgency Fee (24h)
+              </span>
+              <span>₦{calculation.urgencyCost.toLocaleString()}</span>
+            </div>
+          )}
+
+          {calculation.shortNoticeCost > 0 && (
+            <div className="flex justify-between items-center text-red-400">
+              <span className="flex items-center gap-1.5">
+                <Zap className="w-3 h-3" /> Express Fee (90m)
+              </span>
+              <span>₦{calculation.shortNoticeCost.toLocaleString()}</span>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Price Summary */}
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-slate-600">
-            Subtotal ({selectedDates.length} day
-            {selectedDates.length !== 1 ? 's' : ''})
-          </span>
-          <span className="font-medium text-slate-900">
-            ₦{totalAmount.toLocaleString()}
+        <div className="h-px bg-slate-700" />
+
+        <div className="flex justify-between items-end">
+          <span className="font-semibold text-slate-100">Total Payable</span>
+          <span className="font-bold text-2xl text-white">
+            ₦{calculation.total.toLocaleString()}
           </span>
         </div>
 
-        <div className="h-px bg-slate-200" />
-        <div className="flex justify-between">
-          <span className="font-semibold text-slate-900">Total</span>
-          <span className="font-bold text-xl text-slate-900">
-            ₦{totalAmount.toLocaleString()}
-          </span>
+        <div className="flex justify-end pt-2">
+          <div className="flex items-center gap-1.5 bg-slate-800 px-2 py-1 rounded text-[10px] text-slate-400 border border-slate-700">
+            <ShieldCheck className="w-3 h-3 text-green-500" />
+            <span>Secured by Paystack</span>
+          </div>
         </div>
       </div>
 
-      {/* Error Message */}
-      {createBooking.isError && (
-        <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-          <p className="text-sm text-red-600 flex items-center">
-            <AlertCircle className="w-4 h-4 mr-2" />
-            Failed to create booking. Please try again.
-          </p>
-        </div>
-      )}
-
-      {/* Submit Button */}
-      <div className="pt-4">
-        <Button
-          onClick={handleSubmit}
-          disabled={createBooking.isPending || isRedirecting}
-          className="w-full h-12 text-lg font-medium bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+      {/* Submit */}
+      <Button
+        onClick={handleSubmit}
+        disabled={createBooking.isPending || isRedirecting}
+        className="w-full h-12 text-lg font-medium bg-slate-900 text-white hover:bg-slate-800"
+      >
+        {isRedirecting ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redirecting...
+          </>
+        ) : createBooking.isPending ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...
+          </>
+        ) : (
+          `Pay ₦${calculation.total.toLocaleString()}`
+        )}
+      </Button>
+      <p className="text-xs text-center text-slate-500 px-4">
+        By processing this payment, you agree to our{' '}
+        <a
+          href="/terms-and-conditions"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium underline underline-offset-2 hover:text-slate-800 transition-colors cursor-pointer"
         >
-          {isRedirecting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Redirecting to Paystack...
-            </>
-          ) : createBooking.isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            `Pay ₦${totalAmount.toLocaleString()}`
-          )}
-        </Button>
-        <p className="text-xs text-center text-muted-foreground mt-3">
-          By clicking pay, you agree to our terms of service.
-        </p>
-      </div>
+          Terms & Conditions
+        </a>
+        .
+      </p>
     </div>
   );
 };

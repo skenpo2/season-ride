@@ -1,7 +1,8 @@
 import axios, { AxiosError } from 'axios';
 
+const apiUrl = import.meta.env.VITE_API_URL;
 export const api = axios.create({
-  baseURL: 'https://driver-api.voyaapp.co/api',
+  baseURL: apiUrl,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
