@@ -3,7 +3,6 @@ import { MessageCircleQuestion } from 'lucide-react';
 import logo from '../assets/Voya_logo.svg';
 
 const VOYA_DARK_BG = 'bg-[#050B14]';
-// Using the number provided in your Terms & Conditions
 const SUPPORT_PHONE = '2348149696918';
 
 export const Navbar = () => (
@@ -12,9 +11,9 @@ export const Navbar = () => (
   >
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center">
       <div className="flex items-center gap-4">
-        {/* Logo Section */}
+        {/* Logo Section - Reduced size to h-8 */}
         <div className="relative flex items-center">
-          <img src={logo} alt="Voya" className="h-10 w-auto object-contain" />
+          <img src={logo} alt="Voya" className="h-8 w-auto object-contain" />
         </div>
 
         {/* Divider */}
