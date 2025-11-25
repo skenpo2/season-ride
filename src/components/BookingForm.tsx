@@ -543,7 +543,7 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
       <p className="text-xs text-center text-slate-500 px-4">
         By processing this payment, you agree to our{' '}
         <a
-          href="/terms-and-conditions"
+          href="/terms"
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium underline underline-offset-2 hover:text-slate-800 transition-colors cursor-pointer"

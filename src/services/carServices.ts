@@ -59,20 +59,29 @@ export const carService = {
    * Get paginated cars list
    */
   getCars: async (params: CarsQueryParams): Promise<PaginatedCarsResponse> => {
+    // Build query params object - don't convert numbers to strings
     const queryParams: Record<string, string | number> = {
       page: params.page,
       limit: params.limit,
     };
 
+    // Only add type param if it exists and is not 'all'
     if (params.type && params.type !== 'all') {
-      queryParams.type = params.type;
+      // Normalize to match backend: SUV, Sedan, Van
+      const typeMap: Record<string, string> = {
+        suv: 'SUV',
+        sedan: 'Sedan',
+        van: 'Van',
+      };
+      queryParams.type = typeMap[params.type.toLowerCase()] || params.type;
     }
+
+    console.log('🔍 Fetching cars with params:', queryParams); // Debug log
 
     const response = await api.get<ApiResponse<ApiCar[]>>('/cars', {
       params: queryParams,
     });
 
-    // Transform _id to id for all cars
     const transformedCars = response.data.data.map(transformCar);
 
     return {

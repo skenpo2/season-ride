@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CardCarouselProps {
   images: string[];
@@ -20,9 +21,9 @@ export const CardCarousel = ({ images }: CardCarouselProps) => {
   };
 
   return (
-    <div className="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 group">
+    <div className="relative w-full h-full group bg-slate-200">
       <div
-        className="flex transition-transform duration-500 ease-out h-full"
+        className="flex h-full transition-transform duration-500 ease-out will-change-transform"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {images.map((img, idx) => (
@@ -30,40 +31,44 @@ export const CardCarousel = ({ images }: CardCarouselProps) => {
             key={idx}
             src={img}
             loading="lazy"
-            alt={`Car view ${idx + 1}`}
-            className="w-full h-full object-cover flex-shrink-0"
+            alt={`Vehicle view ${idx + 1}`}
+            className="w-full h-full object-cover shrink-0"
           />
         ))}
       </div>
 
       {images.length > 1 && (
         <>
-          <div className="absolute inset-0 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute inset-0 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <Button
               onClick={prev}
               size="icon"
-              variant="secondary"
-              className="h-8 w-8 rounded-full bg-white/80 backdrop-blur text-slate-900 hover:bg-white border-0 shadow-sm"
+              variant="ghost"
+              className="h-8 w-8 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-[2px]"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
               onClick={next}
               size="icon"
-              variant="secondary"
-              className="h-8 w-8 rounded-full bg-white/80 backdrop-blur text-slate-900 hover:bg-white border-0 shadow-sm"
+              variant="ghost"
+              className="h-8 w-8 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-[2px]"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {/* Very subtle indicator dots */}
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
             {images.map((_, idx) => (
               <div
                 key={idx}
-                className={`h-1.5 rounded-full transition-all shadow-sm ${
-                  idx === currentIndex ? 'bg-white w-5' : 'bg-white/50 w-1.5'
-                }`}
+                className={cn(
+                  'h-1 rounded-full transition-all duration-300 shadow-sm',
+                  idx === currentIndex
+                    ? 'bg-white w-4 opacity-100'
+                    : 'bg-white/60 w-1 opacity-60'
+                )}
               />
             ))}
           </div>

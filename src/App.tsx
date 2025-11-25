@@ -13,6 +13,8 @@ import { CarsManagementPage } from '@/pages/admin/CarsManagementPage';
 import { CarUploadPage } from '@/pages/admin/CarUploadPage';
 import { PaymentsPage } from '@/pages/admin/PaymentsPage';
 import PaymentStatusPage from './pages/PaymentStatus';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
         {/* Public Routes */}
         <Route element={<Layout />}>
           <Route index element={<CarsPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
         </Route>
         <Route path="/payment/status" element={<PaymentStatusPage />} />
 

@@ -2,7 +2,6 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-  keepPreviousData,
   type UseQueryOptions,
 } from '@tanstack/react-query';
 
@@ -26,15 +25,16 @@ export const carKeys = {
 
 /**
  * Hook to fetch paginated cars
- * Uses keepPreviousData to prevent loading states between pages
+ * Each filter constructs a different URL
  */
 export const useCars = (params: CarsQueryParams) => {
   return useQuery({
     queryKey: carKeys.list(params),
     queryFn: () => carService.getCars(params),
-    placeholderData: keepPreviousData,
     staleTime: 3 * 60 * 1000, // 3 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (cache time)
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -72,6 +72,7 @@ export const useVerifyDiscount = () => {
       carService.verifyDiscount(data),
   });
 };
+
 /**
  * Hook to create booking
  */
