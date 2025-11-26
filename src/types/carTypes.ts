@@ -16,6 +16,7 @@ export interface Car {
   rating?: number;
   trips?: number;
   available?: boolean;
+  amenities: string[];
 }
 
 export interface PaginationMeta {

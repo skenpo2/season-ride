@@ -36,8 +36,13 @@ export const TermsPage = () => {
             <Section title="1. Service Description">
               <p>
                 1.1. VOYA provides a dedicated vehicle and professional driver
-                for a continuous 12-hour period within Lagos State only.
+                within Lagos State only, under the following service durations
+                (each a “Booking”):
               </p>
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                <li>8-hour Daily Driver Service, or</li>
+                <li>12-hour Daily Driver Service.</li>
+              </ul>
               <div className="mt-2">
                 <p>1.2. VOYA operates two vehicle categories:</p>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
@@ -46,14 +51,26 @@ export const TermsPage = () => {
                 </ul>
               </div>
               <div className="mt-2">
-                <p>1.3. Each booking includes:</p>
+                <p>1.3. Each booking (8-hour or 12-hour) includes:</p>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
                   <li>1 dedicated driver</li>
                   <li>
                     1 assigned vehicle (Sedan or SUV, in Petrol or EV variant)
                   </li>
-                  <li>12 consecutive hours from the agreed start time</li>
-                  <li>100 km of included travel distance within Lagos State</li>
+                  <li>
+                    A continuous service window from the agreed start time:
+                    <ul className="list-[circle] pl-5 mt-1">
+                      <li>8 consecutive hours for the 8-hour service; or</li>
+                      <li>12 consecutive hours for the 12-hour service</li>
+                    </ul>
+                  </li>
+                  <li>
+                    Included travel distance within Lagos State as follows:
+                    <ul className="list-[circle] pl-5 mt-1">
+                      <li>8-hour service: 70 km included</li>
+                      <li>12-hour service: 100 km included</li>
+                    </ul>
+                  </li>
                 </ul>
               </div>
               <p>
@@ -65,8 +82,8 @@ export const TermsPage = () => {
             <Section title="2. Booking, Payment & Confirmation">
               <p>
                 2.1. <strong>Standard Bookings – 24 Hours’ Notice:</strong> All
-                standard bookings must be made at least 24 hours before the
-                requested start time.
+                standard bookings (8-hour or 12-hour) must be made at least 24
+                hours before the requested start time.
               </p>
               <p>
                 2.2. <strong>Non-Compliance with 24-Hour Rule:</strong> Bookings
@@ -92,34 +109,42 @@ export const TermsPage = () => {
               <p>
                 2.4. <strong>Payment & Confirmation:</strong> Payment validates
                 booking. A booking is considered confirmed only after VOYA has
-                received and confirmed full payment (base fare plus any
-                applicable rush/instant fee). Service will not commence without
-                confirmed payment.
+                received and confirmed full payment (base fare for the chosen
+                duration and vehicle category, plus any applicable rush/instant
+                fee). Service will not commence without confirmed payment.
               </p>
             </Section>
 
             <Section title="3. Duration & Service Window">
               <p>
-                3.1. Each booking covers a continuous 12-hour service window
-                starting from the agreed start time.
+                3.1. Each booking covers a continuous service window starting
+                from the agreed start time, based on the selected option:
+              </p>
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                <li>8 consecutive hours, or</li>
+                <li>12 consecutive hours.</li>
+              </ul>
+              <p>
+                3.2. The selected service period (8 hours or 12 hours) cannot be
+                paused, split, or carried over to another day.
               </p>
               <p>
-                3.2. The 12-hour period cannot be paused, split, or carried over
-                to another day.
-              </p>
-              <p>
-                3.3. At the end of the 12 hours, the driver may end the service
-                as scheduled, or agree, at their sole discretion, to continue
-                for extended hours under new terms agreed between VOYA and the
-                Client, including additional charges.
+                3.3. At the end of the booked hours, the driver may end the
+                service as scheduled, or agree, at their sole discretion, to
+                continue for extended hours under new terms agreed between VOYA
+                and the Client, including additional charges.
               </p>
             </Section>
 
             <Section title="4. Distance, Kilometres Included & Extra-Km Charges">
               <p>
-                4.1. Each 12-hour booking includes 100 km of travel within Lagos
-                State.
+                4.1. Included distance per booking within Lagos State is as
+                follows:
               </p>
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                <li>8-hour service: 70 km included</li>
+                <li>12-hour service: 100 km included</li>
+              </ul>
               <p>
                 4.2. Distance is measured by: (a) the vehicle’s odometer
                 readings (start and end), and/or (b) VOYA’s GPS tracking
@@ -132,8 +157,10 @@ export const TermsPage = () => {
               </p>
               <div className="mt-2">
                 <p>
-                  4.4. If total distance exceeds 100 km, extra-km charges apply
-                  per additional kilometre as follows:
+                  4.4. If total distance exceeds the included kilometre
+                  allowance for the selected service (70 km for 8 hours; 100 km
+                  for 12 hours), extra-km charges apply per additional kilometre
+                  as follows:
                 </p>
                 <ul className="list-disc pl-5 mt-1 space-y-1">
                   <li>Sedans (Petrol or EV): ₦3,000 per km</li>
@@ -266,10 +293,10 @@ export const TermsPage = () => {
             <Section title="10. Rescheduling, Cancellations & Refunds">
               <p>
                 10.1. <strong>Rescheduling by Client:</strong> The Client may
-                request to reschedule a confirmed booking up to 6 hours before
-                the start time, subject to vehicle and driver availability. VOYA
-                is not obligated to accept reschedule requests made less than 6
-                hours before the start time.
+                request to reschedule a confirmed booking (8-hour or 12-hour) up
+                to 6 hours before the start time, subject to vehicle and driver
+                availability. VOYA is not obligated to accept reschedule
+                requests made less than 6 hours before the start time.
               </p>
               <p>
                 10.2. <strong>Cancellations by Client:</strong> Client-initiated

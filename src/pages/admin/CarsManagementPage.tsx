@@ -1,4 +1,3 @@
-// src/pages/admin/CarsManagementPage.tsx
 import { useState } from 'react';
 import { useAdminCars, useDeleteCar } from '@/hooks/useAdmin';
 import { Pagination } from '@/components/Pagination';
@@ -161,11 +160,6 @@ export const CarsManagementPage = () => {
                         >
                           Edit
                         </DropdownMenuItem>
-                        {/* <DropdownMenuItem
-                          onClick={() => navigate(`/car/${car.id}`)}
-                        >
-                          View Details
-                        </DropdownMenuItem> */}
                         <DropdownMenuItem
                           onClick={() => setDeleteId(car.id)}
                           className="text-red-600"

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreateCar, useUpdateCar } from '@/hooks/useAdmin';
-import { useCar } from '@/hooks/useCar'; // Changed from useCar
+import { useCar } from '@/hooks/useCar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,14 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  AlertCircle,
-  Loader2,
-  X,
-  Upload,
-  Plus,
-  Car as CarEmoji,
-} from 'lucide-react';
+import { Loader2, X, Upload, Plus, Car as CarEmoji } from 'lucide-react';
 import { type CarFormData } from '@/types/carTypes';
 
 export const CarUploadPage = () => {
@@ -62,7 +55,8 @@ export const CarUploadPage = () => {
         price: existingCar.price,
         status: existingCar.available ? 'available' : 'unavailable',
         type: existingCar.type,
-        amenities: [''], // Backend should provide this
+        amenities:
+          existingCar.amenities?.length > 0 ? existingCar.amenities : [''],
         images: existingCar.images,
         transmission: existingCar.features.transmission || 'Auto',
         duration: existingCar.features.duration,
@@ -100,8 +94,6 @@ export const CarUploadPage = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-
-    // Get current image count (handle both File[] and string[])
     const currentImages = formData.images || [];
     const currentImagesCount = currentImages.length;
 
@@ -113,7 +105,6 @@ export const CarUploadPage = () => {
       return;
     }
 
-    // Create previews for new files only
     const newPreviews: string[] = [];
     let loadedCount = 0;
 
@@ -122,8 +113,6 @@ export const CarUploadPage = () => {
       reader.onloadend = () => {
         newPreviews.push(reader.result as string);
         loadedCount++;
-
-        // Once all files are loaded, update state
         if (loadedCount === files.length) {
           setImagePreviews((prev) => [...prev, ...newPreviews]);
         }
@@ -131,20 +120,17 @@ export const CarUploadPage = () => {
       reader.readAsDataURL(file);
     });
 
-    // Add new files to existing images
     setFormData((prev) => ({
       ...prev,
       images: [...currentImages, ...files],
     }));
 
-    // Clear any previous image errors
     if (errors.images) {
       setErrors((prev) => ({ ...prev, images: '' }));
     }
   };
 
   const removeImage = (index: number) => {
-    // Update formData.images
     setFormData((prev) => {
       const currentImages = prev.images || [];
       return {
@@ -152,8 +138,6 @@ export const CarUploadPage = () => {
         images: currentImages.filter((_, i) => i !== index),
       };
     });
-
-    // Update imagePreviews
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -170,7 +154,6 @@ export const CarUploadPage = () => {
     }
     if (formData.price <= 0) newErrors.price = 'Price must be greater than 0';
 
-    // Check if images exist (only for create mode)
     if (!isEditMode) {
       const hasImages = formData.images && formData.images.length > 0;
       if (!hasImages) {
@@ -183,15 +166,20 @@ export const CarUploadPage = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log(isEditMode, id);
     e.preventDefault();
     if (!validate()) return;
 
+    // Clean empty amenities before submitting
+    const cleanedData = {
+      ...formData,
+      amenities: formData.amenities.filter((a) => a.trim() !== ''),
+    };
+
     try {
       if (isEditMode && id) {
-        await updateCar.mutateAsync({ id, ...formData });
+        await updateCar.mutateAsync({ id, ...cleanedData });
       } else {
-        await createCar.mutateAsync(formData);
+        await createCar.mutateAsync(cleanedData);
       }
       navigate('/admin/cars');
     } catch (error) {
@@ -245,10 +233,7 @@ export const CarUploadPage = () => {
                 className={errors.name ? 'border-red-500' : ''}
               />
               {errors.name && (
-                <p className="text-xs text-red-500 flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  {errors.name}
-                </p>
+                <p className="text-xs text-red-500">{errors.name}</p>
               )}
             </div>
 
@@ -271,10 +256,7 @@ export const CarUploadPage = () => {
                 className={errors.year ? 'border-red-500' : ''}
               />
               {errors.year && (
-                <p className="text-xs text-red-500 flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  {errors.year}
-                </p>
+                <p className="text-xs text-red-500">{errors.year}</p>
               )}
             </div>
 
@@ -294,10 +276,7 @@ export const CarUploadPage = () => {
                 className={errors.fuel ? 'border-red-500' : ''}
               />
               {errors.fuel && (
-                <p className="text-xs text-red-500 flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  {errors.fuel}
-                </p>
+                <p className="text-xs text-red-500">{errors.fuel}</p>
               )}
             </div>
 
@@ -329,12 +308,6 @@ export const CarUploadPage = () => {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.seats && (
-                <p className="text-xs text-red-500 flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  {errors.seats}
-                </p>
-              )}
             </div>
 
             {/* Hours */}
@@ -370,21 +343,18 @@ export const CarUploadPage = () => {
                 className={errors.price ? 'border-red-500' : ''}
               />
               {errors.price && (
-                <p className="text-xs text-red-500 flex items-center">
-                  <AlertCircle className="w-3 h-3 mr-1" />
-                  {errors.price}
-                </p>
+                <p className="text-xs text-red-500">{errors.price}</p>
               )}
             </div>
 
-            {/* Car Status */}
+            {/* Status & Type */}
             <div className="space-y-2">
               <Label htmlFor="status">Car Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(
-                  val: 'available' | 'unavailable' | 'maintenance'
-                ) => handleInputChange('status', val)}
+                onValueChange={(val: unknown) =>
+                  handleInputChange('status', val)
+                }
               >
                 <SelectTrigger id="status">
                   <SelectValue />
@@ -397,14 +367,11 @@ export const CarUploadPage = () => {
               </Select>
             </div>
 
-            {/* Car Type */}
             <div className="space-y-2">
               <Label htmlFor="type">Car Type</Label>
               <Select
                 value={formData.type}
-                onValueChange={(val: 'SUV' | 'Sedan' | 'Van') =>
-                  handleInputChange('type', val)
-                }
+                onValueChange={(val: unknown) => handleInputChange('type', val)}
               >
                 <SelectTrigger id="type">
                   <SelectValue />
@@ -419,7 +386,7 @@ export const CarUploadPage = () => {
           </div>
         </div>
 
-        {/* Amenities */}
+        {/* Amenities Section */}
         <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-slate-900">Amenities</h2>
@@ -437,20 +404,24 @@ export const CarUploadPage = () => {
 
           <div className="space-y-3">
             {formData.amenities.map((amenity, index) => (
-              <div key={index} className="flex gap-2">
+              <div key={index} className="flex gap-2 items-center">
+                <span className="text-sm font-mono text-slate-400 w-6 text-right">
+                  {index + 1}.
+                </span>
                 <Input
-                  placeholder={`Amenity ${index + 1}`}
+                  placeholder="e.g. Leather Seats, Bluetooth, AC"
                   value={amenity}
                   onChange={(e) => handleAmenityChange(index, e.target.value)}
                   className="flex-1"
                 />
-                {formData.amenities.length > 1 && (
+                {/* Always show delete button unless it's the only one AND it's empty */}
+                {(formData.amenities.length > 1 || amenity !== '') && (
                   <Button
                     type="button"
                     variant="outline"
                     size="icon"
                     onClick={() => removeAmenity(index)}
-                    className="border-red-200 text-red-600 hover:bg-red-50"
+                    className="border-red-200 text-red-600 hover:bg-red-50 shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -458,6 +429,11 @@ export const CarUploadPage = () => {
               </div>
             ))}
           </div>
+          {formData.amenities.length === 0 && (
+            <p className="text-sm text-slate-500 italic">
+              No amenities added. Click 'Add Amenity' to start.
+            </p>
+          )}
         </div>
 
         {/* Car Images */}
@@ -466,7 +442,6 @@ export const CarUploadPage = () => {
             Car Images (Max 3)
           </h2>
 
-          {/* Image Previews */}
           {imagePreviews.length > 0 && (
             <div className="grid grid-cols-3 gap-4">
               {imagePreviews.map((preview, index) => (
@@ -490,7 +465,6 @@ export const CarUploadPage = () => {
             </div>
           )}
 
-          {/* Upload Button */}
           {imagePreviews.length < 3 && (
             <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-slate-400 transition-colors">
               <input
@@ -515,24 +489,10 @@ export const CarUploadPage = () => {
               </label>
             </div>
           )}
-
           {errors.images && (
-            <p className="text-xs text-red-500 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              {errors.images}
-            </p>
+            <p className="text-xs text-red-500">{errors.images}</p>
           )}
         </div>
-
-        {/* Error Message */}
-        {(createCar.isError || updateCar.isError) && (
-          <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-            <p className="text-sm text-red-600 flex items-center">
-              <AlertCircle className="w-4 h-4 mr-2" />
-              {'Failed to save car'}
-            </p>
-          </div>
-        )}
 
         {/* Submit Buttons */}
         <div className="flex gap-4">

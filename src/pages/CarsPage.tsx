@@ -46,7 +46,6 @@ export const CarsPage = () => {
   });
 
   const handleFilterChange = (newType: string) => {
-    console.log('🔄 Filter changed to:', newType);
     setFilterType(newType);
     setCurrentPage(1);
   };
@@ -81,8 +80,8 @@ export const CarsPage = () => {
         {/* Modern Header Section */}
         <div className="flex flex-col gap-8 mb-10">
           {/* Title and Stats */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-3">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div className="space-y-4 max-w-3xl">
               <div className="flex items-center gap-3">
                 <h1 className="text-4xl font-bold tracking-tight bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent">
                   Our Fleet
@@ -94,10 +93,21 @@ export const CarsPage = () => {
                   {totalCars} vehicles
                 </Badge>
               </div>
-              <p className="text-base text-slate-600 max-w-2xl">
-                Discover premium vehicles tailored for your corporate needs.
-                From executive sedans to spacious SUVs.
-              </p>
+
+              {/* --- UPDATED SUBHEADING --- */}
+              <div className="text-base text-slate-600 leading-relaxed space-y-2">
+                <p>
+                  Welcome to Lagos! Don’t let the tin-can Ubers humble you. In
+                  December, those apps stay on “no cars available” — and when
+                  one appears, it’s overpriced and trapped in disrespectful
+                  traffic.
+                </p>
+                <p className="font-medium text-slate-800">
+                  A private daily driver is the only way to move. If you’re
+                  going to spend 5.53 avg hours a day in traffic, at least be
+                  comfortable. Don’t believe me? Ask anybody. Literally.
+                </p>
+              </div>
             </div>
           </div>
 

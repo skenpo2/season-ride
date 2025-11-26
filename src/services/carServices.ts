@@ -51,6 +51,7 @@ const transformCar = (apiCar: ApiCar): Car => {
     rating: apiCar.rating,
     trips: apiCar.trips,
     available: apiCar.available,
+    amenities: apiCar.amenities,
   };
 };
 

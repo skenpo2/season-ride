@@ -36,6 +36,7 @@ import {
   ShieldCheck,
   Info,
   Zap,
+  Check,
 } from 'lucide-react';
 import type { Car, FormErrors, BookingDate } from '@/types/carTypes';
 
@@ -138,7 +139,6 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
     checkTimeLogic();
   }, [selectedDates, selectedHour, acceptUrgency]);
 
-  // --- 3. TOTAL CALCULATION ---
   const calculation = useMemo(() => {
     const days = selectedDates.length;
     const subtotal = days * car.price;
@@ -199,8 +199,6 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
       },
     };
 
-    console.log('Final Payload:', payload);
-
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response: any = await createBooking.mutateAsync(payload as any);
@@ -234,40 +232,93 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Car Summary */}
-      <div className="flex flex-col md:flex-row gap-6 items-start p-4 rounded-xl bg-slate-50 border border-slate-200">
-        <div className="w-full md:w-1/3 rounded-lg overflow-hidden shadow-sm">
+      {/* Car Summary Card */}
+      <div className="flex flex-col md:flex-row gap-5 items-start p-5 rounded-xl bg-white border border-slate-200 shadow-sm">
+        <div className="w-full md:w-32 h-24 rounded-lg overflow-hidden shadow-inner shrink-0 bg-slate-100 border border-slate-100">
           <img
             src={car.images[0]}
             alt={car.name}
-            className="w-full h-24 object-cover"
+            className="w-full h-full object-cover"
           />
         </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-slate-900">{car.name}</h3>
-          <p className="text-sm text-slate-500 mb-2">
-            {car.type} • {car.features.year}
-          </p>
-          <div className="flex gap-2">
+
+        <div className="flex-1 space-y-4 w-full">
+          {/* Header Row */}
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge className="bg-slate-900 text-white hover:bg-slate-800 text-[10px] px-1.5 h-5">
+                  {car.type}
+                </Badge>
+                <span className="text-xs text-slate-500 font-medium">
+                  {car.features.year}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 leading-none">
+                {car.name}
+              </h3>
+            </div>
+
+            <div className="text-right hidden md:block">
+              <div className="text-lg font-bold text-slate-900">
+                ₦{car.price.toLocaleString()}
+              </div>
+              <div className="text-xs text-slate-500">per day</div>
+            </div>
+          </div>
+
+          {/* Specs Row */}
+          <div className="flex flex-wrap gap-2">
             <Badge
               variant="outline"
-              className="bg-white text-xs border-slate-200 text-slate-700"
+              className="bg-slate-50 text-slate-600 font-medium border-slate-200"
             >
-              <Users className="w-3 h-3 mr-1" /> {car.features.seats}
+              <Users className="w-3 h-3 mr-1.5 text-slate-400" />{' '}
+              {car.features.seats} Seats
             </Badge>
             <Badge
               variant="outline"
-              className="bg-white text-xs border-slate-200 text-slate-700"
+              className="bg-slate-50 text-slate-600 font-medium border-slate-200"
             >
-              <Fuel className="w-3 h-3 mr-1" /> {car.features.fuel}
+              <Fuel className="w-3 h-3 mr-1.5 text-slate-400" />{' '}
+              {car.features.fuel}
             </Badge>
+            {car.features.duration && (
+              <Badge
+                variant="outline"
+                className="bg-slate-50 text-slate-600 font-medium border-slate-200"
+              >
+                <Clock className="w-3 h-3 mr-1.5 text-slate-400" />{' '}
+                {car.features.duration}
+              </Badge>
+            )}
           </div>
-        </div>
-        <div className="text-right">
-          <div className="text-lg font-bold text-slate-900">
-            ₦{car.price.toLocaleString()}
-          </div>
-          <div className="text-xs text-slate-500">per day</div>
+
+          {/* --- AMENITIES: VISIBLE & CATCHY --- */}
+          {car.amenities &&
+            car.amenities.length > 0 &&
+            car.amenities[0] !== '' && (
+              <div className="pt-3 mt-2 border-t border-slate-100">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                  Amenities / features in this car
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {car.amenities.map((amenity, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 shadow-sm"
+                    >
+                      <div className="bg-green-500 rounded-full p-0.5 mr-2 shrink-0">
+                        <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700 capitalize leading-none">
+                        {amenity}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
         </div>
       </div>
 
