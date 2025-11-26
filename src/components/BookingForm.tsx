@@ -54,7 +54,7 @@ const TIME_OPTIONS = [
   { label: '9am', hour: 9 },
   { label: '10am', hour: 10 },
   { label: '11am', hour: 11 },
-  { label: '12', hour: 12 },
+  { label: '12 noon', hour: 12 },
   { label: '1pm', hour: 13 },
   { label: '2pm', hour: 14 },
   { label: '3pm', hour: 15 },
@@ -66,14 +66,13 @@ const TIME_OPTIONS = [
   { label: '9pm', hour: 21 },
   { label: '10pm', hour: 22 },
   { label: '11pm', hour: 23 },
-  { label: '12pm (Midnight)', hour: 24 },
+  { label: '12am (Midnight)', hour: 24 },
 ];
 
 export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Form Data
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -82,7 +81,6 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
     pickup: '',
   });
 
-  // Logic State
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [selectedHour, setSelectedHour] = useState<string>('9');
   const [acceptUrgency, setAcceptUrgency] = useState(false);
@@ -90,7 +88,6 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
 
   const createBooking = useCreateBooking();
 
-  // --- 2. FLAWLESS TIME CALCULATION LOGIC ---
   useEffect(() => {
     const checkTimeLogic = () => {
       if (selectedDates.length === 0) {
@@ -398,7 +395,6 @@ export const BookingForm = ({ car, onSuccess }: BookingFormProps) => {
                     mode="multiple"
                     selected={selectedDates}
                     onSelect={(dates) => {
-                      // ✅ FIX: State update + Error clearing in one synchronous handler
                       const newDates = dates ?? [];
                       setSelectedDates(newDates);
                       if (newDates.length > 0 && errors.dates) {

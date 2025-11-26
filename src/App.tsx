@@ -3,7 +3,7 @@ import { Layout } from '@/components/Layout';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { CarsPage } from '@/pages/CarsPage';
-// import { NotFoundPage } from '@/pages/NotFoundPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
 
 // Admin Pages
 import { LoginPage } from '@/pages/admin/LoginPage';
@@ -15,12 +15,13 @@ import { PaymentsPage } from '@/pages/admin/PaymentsPage';
 import PaymentStatusPage from './pages/PaymentStatus';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import ScrollToTop from './components/ScrollToTop';
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
-        {/* Public Routes */}
         <Route element={<Layout />}>
           <Route index element={<CarsPage />} />
           <Route path="/terms" element={<TermsPage />} />
@@ -28,10 +29,8 @@ export default function App() {
         </Route>
         <Route path="/payment/status" element={<PaymentStatusPage />} />
 
-        {/* Admin Login (No Layout) */}
         <Route path="/admin/login" element={<LoginPage />} />
 
-        {/* Protected Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -48,6 +47,8 @@ export default function App() {
           <Route path="cars/edit/:id" element={<CarUploadPage />} />
           <Route path="payments" element={<PaymentsPage />} />
         </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );
