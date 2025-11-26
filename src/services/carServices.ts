@@ -36,7 +36,7 @@ interface ApiCar {
   trips?: number;
   available?: boolean;
   status?: string;
-  amenities?: string[];
+  amenities: string[];
 }
 
 // Transform function
@@ -51,7 +51,7 @@ const transformCar = (apiCar: ApiCar): Car => {
     rating: apiCar.rating,
     trips: apiCar.trips,
     available: apiCar.available,
-    amenities: apiCar.amenities,
+    amenities: apiCar.amenities || ['Not Specified'],
   };
 };
 
